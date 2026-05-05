@@ -1,0 +1,8 @@
+# opencv 4.11+ requires numpy>=2, but mediapipe 0.10.14 needs numpy<2.
+# Pin opencv to 4.10.x to keep both happy.
+opencv-python==4.10.0.84
+# mediapipe 0.10.21+ removed the legacy mp.solutions module; pin to the
+# last release that still exposes it. 0.10.14 is widely used and stable.
+mediapipe==0.10.14
+numpy>=1.24.0,<2
+pygame>=2.5.0

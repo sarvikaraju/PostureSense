@@ -1,0 +1,12 @@
+# Runtime-generated files
+calibration.json
+__pycache__/
+*.pyc
+*.pyo
+
+# Claude Code internal directory
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
