@@ -1,5 +1,4 @@
-"""
-PostureSense — Real-Time Posture Correction System
+'''PostureSense — Real-Time Posture Correction System
 Final Year Engineering Project (IDP)
 
 Author: PostureSense Team
@@ -26,16 +25,16 @@ Module architecture:
 
 Hardware hook (future):
   See feedback.py → FeedbackSystem._beep_thread_fn() for the marked
-  insertion point to add vibration motor commands.
-"""
+  insertion point to add vibration motor commands.'''
 
 import cv2
 import time
 import serial
-import time
+
 arduino = serial.Serial('COM7', 9600)
 time.sleep(2)
-last_state=""
+
+last_state = ""
 
 from pose_detector    import PoseDetector
 from posture_analyzer import analyze_posture
@@ -166,6 +165,29 @@ def main():
             scorer.update(result.is_good, delta)
             stats = scorer.get_stats()
             feedback.update(stats['consecutive_bad_seconds'])
+
+            # --- Bluetooth Motor Control ---
+            global last_state
+
+            if result.is_good:
+
+                if last_state != "GOOD":
+
+                    arduino.write(b'G')
+
+                    print("GOOD POSTURE")
+
+                    last_state = "GOOD"
+
+            else:
+
+                if last_state != "BAD":
+
+                    arduino.write(b'B')
+
+                    print("BAD POSTURE")
+
+                    last_state = "BAD"
 
             # --- Draw all UI elements onto the frame ---
             draw_ui(
