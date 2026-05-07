@@ -31,6 +31,8 @@ Hardware hook (future):
 
 import cv2
 import time
+import serial
+import time
 
 from pose_detector    import PoseDetector
 from posture_analyzer import analyze_posture
