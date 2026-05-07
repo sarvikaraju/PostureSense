@@ -33,6 +33,9 @@ import cv2
 import time
 import serial
 import time
+arduino = serial.Serial('COM7', 9600)
+time.sleep(2)
+last_state=""
 
 from pose_detector    import PoseDetector
 from posture_analyzer import analyze_posture
