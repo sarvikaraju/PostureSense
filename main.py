@@ -170,38 +170,26 @@ def main():
 
             bad_time = stats['consecutive_bad_seconds']
 
-# GOOD POSTURE
-if result.is_good:
+            # GOOD POSTURE
+            if result.is_good:
+                if last_state != "GOOD":
+                    arduino.write(b'G')
+                    print("GOOD POSTURE")
+                    last_state = "GOOD"
 
-    if last_state != "GOOD":
+            # SLIGHT BAD POSTURE
+            elif bad_time >= 3 and bad_time < 8:
+                if last_state != "WARNING":
+                    arduino.write(b'W')
+                    print("WARNING BUZZ")
+                    last_state = "WARNING"
 
-        arduino.write(b'G')
-
-        print("GOOD POSTURE")
-
-        last_state = "GOOD"
-
-# SLIGHT BAD POSTURE
-elif bad_time >= 3 and bad_time < 8:
-
-    if last_state != "WARNING":
-
-        arduino.write(b'W')
-
-        print("WARNING BUZZ")
-
-        last_state = "WARNING"
-
-# SEVERE BAD POSTURE
-elif bad_time >= 8:
-
-    if last_state != "BAD":
-
-        arduino.write(b'B')
-
-        print("CONTINUOUS BUZZ")
-
-        last_state = "BAD"
+            # SEVERE BAD POSTURE
+            elif bad_time >= 8:
+                if last_state != "BAD":
+                    arduino.write(b'B')
+                    print("CONTINUOUS BUZZ")
+                    last_state = "BAD"
 
             # --- Draw all UI elements onto the frame ---
             draw_ui(
@@ -212,8 +200,7 @@ elif bad_time >= 8:
                 stats                  = stats,
                 calibrated             = calibration.is_calibrated(),
                 fps                    = fps,
-                consecutive_bad_seconds = stats['consecutive_bad_seconds'],
-            )
+                consecutive_bad_seconds = stats['consecutive_bad_seconds'],)
 
         else:
             # --- No pose detected ---
