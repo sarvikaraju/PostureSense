@@ -167,27 +167,41 @@ def main():
             feedback.update(stats['consecutive_bad_seconds'])
 
             # --- Bluetooth Motor Control ---
-            global last_state
 
-            if result.is_good:
+            bad_time = stats['consecutive_bad_seconds']
 
-                if last_state != "GOOD":
+# GOOD POSTURE
+if result.is_good:
 
-                    arduino.write(b'G')
+    if last_state != "GOOD":
 
-                    print("GOOD POSTURE")
+        arduino.write(b'G')
 
-                    last_state = "GOOD"
+        print("GOOD POSTURE")
 
-            else:
+        last_state = "GOOD"
 
-                if last_state != "BAD":
+# SLIGHT BAD POSTURE
+elif bad_time >= 3 and bad_time < 8:
 
-                    arduino.write(b'B')
+    if last_state != "WARNING":
 
-                    print("BAD POSTURE")
+        arduino.write(b'W')
 
-                    last_state = "BAD"
+        print("WARNING BUZZ")
+
+        last_state = "WARNING"
+
+# SEVERE BAD POSTURE
+elif bad_time >= 8:
+
+    if last_state != "BAD":
+
+        arduino.write(b'B')
+
+        print("CONTINUOUS BUZZ")
+
+        last_state = "BAD"
 
             # --- Draw all UI elements onto the frame ---
             draw_ui(
