@@ -15,28 +15,12 @@ A 2-second cooldown prevents beep spam.
 Audio backend:
   Windows → winsound.Beep()   (built-in, no extra install)
   Linux / Mac → pygame.mixer  (generates a sine-wave tone)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-HARDWARE HOOK — Vibration Motor Integration (Future Phase)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Inside _beep_thread_fn(), after the audio section, add one of:
-
-  # Option A: Arduino over USB serial
-  # import serial
-  # port = serial.Serial('COM3', 9600)
-  # port.write(f'VIBRATE:{intensity}\n'.encode())
-
-  # Option B: Raspberry Pi GPIO
-  # import RPi.GPIO as GPIO
-  # GPIO.output(MOTOR_PIN, GPIO.HIGH)
-  # time.sleep(duration_ms / 1000)
-  # GPIO.output(MOTOR_PIN, GPIO.LOW)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
 import time
 import threading
 import platform
+import serial # <--- IMPORT SERIAL FOR BLUETOOTH
 
 _IS_WINDOWS = platform.system() == 'Windows'
 
@@ -77,6 +61,15 @@ class FeedbackSystem:
     def __init__(self):
         self._last_beep_time = 0.0
         self._beeping        = False   # True while a beep thread is active
+        
+        # --- BLUETOOTH SETUP ---
+        # CHANGE 'COM5' to the COM port of your paired HC-05
+        try:
+            self.bluetooth = serial.Serial('COM5', 9600, timeout=1)
+            print("Successfully connected to HC-05 Bluetooth!")
+        except Exception as e:
+            print(f"Warning: Could not connect to Bluetooth. Error: {e}")
+            self.bluetooth = None
 
     # ------------------------------------------------------------------
     # Public interface — called once per frame from main.py
@@ -136,6 +129,14 @@ class FeedbackSystem:
         """
         try:
             for _ in range(repeats):
+                # ── HARDWARE HOOK: TURN MOTOR ON ───────────────────────
+                if self.bluetooth:
+                    try:
+                        self.bluetooth.write(b'B') # Send 'B' for Buzz
+                    except:
+                        pass
+                
+                # PLAY AUDIO
                 if _IS_WINDOWS:
                     # Windows built-in — synchronous, no extra library
                     winsound.Beep(freq, duration_ms)
@@ -146,13 +147,21 @@ class FeedbackSystem:
                     print('\a', end='', flush=True)
                     time.sleep(duration_ms / 1000.0)
 
-                # ── HARDWARE HOOK ──────────────────────────────────────
-                # Add serial / GPIO vibration call here (future phase).
-                # See module docstring for code templates.
-                # ──────────────────────────────────────────────────────
-
+                # ── HARDWARE HOOK: TURN MOTOR OFF ──────────────────────
+                if self.bluetooth:
+                    try:
+                        self.bluetooth.write(b'G') # Send 'G' to stop Buzzing
+                    except:
+                        pass
+                
                 time.sleep(0.05)   # brief silence between repeats
         finally:
+            # Failsafe to ensure motors turn off if thread crashes
+            if self.bluetooth:
+                try:
+                    self.bluetooth.write(b'G')
+                except:
+                    pass
             self._beeping = False
 
     @staticmethod
